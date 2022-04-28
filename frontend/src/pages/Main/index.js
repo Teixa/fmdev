@@ -11,6 +11,7 @@ import Indicators from '../../components/Indicators';
 import PreProcessing from '../../components/PreProcessing';
 import { Creators as ScreenActions } from '../../store/ducks/screen';
 import { Creators as LmsActions } from '../../store/ducks/lms';
+import { Creators as ETLActions } from '../../store/ducks/etl';
 import { DATASOURCE, INDICATORS, PRE_PROCESSING, TRAIN, TRAIN_MODEL, LAD } from '../../constants';
 import Train from '../../components/Train';
 import TrainModel from '../TrainModel';
@@ -20,6 +21,7 @@ class Main extends Component {
 
   componentDidMount() {
     this.props.getLms();
+    this.props.getEtl();
   }
 
   renderContent = () => {
@@ -65,6 +67,6 @@ class Main extends Component {
 const mapStateToProps = ({ screen }) => ({ screen });
 
 const mapDispatchToProps = (dispatch) =>
-  bindActionCreators({ ...ScreenActions, ...LmsActions }, dispatch);
+  bindActionCreators({ ...ScreenActions, ...LmsActions, ...ETLActions }, dispatch);
 
 export default connect(mapStateToProps, mapDispatchToProps)(Main);

@@ -10,6 +10,7 @@ class Course(Resource):
     @jwt_required
     def post(self):
         try:
+
             payload = request.get_json()
 
             if 'datasource' not in payload:
@@ -21,6 +22,7 @@ class Course(Resource):
                         FROM {payload['datasource']}
                         GROUP BY curso
                         ORDER BY curso"""
+
 
             return utils.execute_query(query)
 

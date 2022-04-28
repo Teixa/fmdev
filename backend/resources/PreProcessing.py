@@ -10,6 +10,7 @@ from flask import request, current_app
 from sklearn.impute import SimpleImputer
 from flask_jwt_extended import jwt_required
 from Model import FileModel, DatasourceModel
+import subprocess
 
 
 class PreProcessing(Resource):
@@ -38,6 +39,9 @@ class PreProcessing(Resource):
         
         if payload['context'] == 'CSV':
             return self.get_indicators_description_from_csv()
+
+        if payload['context'] == 'ETL':
+            return self.get_indicators_description_from_etl()
         
         return {}
 
@@ -84,6 +88,38 @@ class PreProcessing(Resource):
 
         return descriptions
 
+    def get_indicators_description_from_etl(self):
+        descriptions = {}
+        payload = request.get_json()
+        lms_id = payload['id']
+
+        query = f"""SELECT
+                        name,
+                        description
+                    FROM
+                        indicators_engajamento
+                    WHERE
+                        etl='{lms_id}'
+                    AND
+                        name IN ({utils.list_to_sql_string(payload['indicators'])})
+                    GROUP BY
+                        name, description, etl
+                """
+
+        data = utils.execute_query(query)
+
+        for item in data:
+            descriptions[item['name']] = item['description']
+
+        return descriptions
+
+    def reload_data(self):
+       
+        print("antes")
+        subprocess.call(['sh','./reload_data.sh'])
+        print("depois")
+
+
     def get_initial_dataframe(self):
         payload = request.get_json()
 
@@ -92,6 +128,11 @@ class PreProcessing(Resource):
         
         if payload['context'] == 'CSV':
             return self.get_initial_dataframe_from_csv()
+
+        if payload['context'] == 'ETL':
+            print("aqui")
+            self.reload_data()
+            return self.get_initial_dataframe_from_etl()
 
         return None
     
@@ -130,6 +171,32 @@ class PreProcessing(Resource):
 
         if 'semesters' in payload and type(payload['semesters']) == list and len(payload['semesters']) > 0:
             query_where += f"""{where} semestre IN ({utils.list_to_sql_string(payload['semesters'])}) """
+
+        if fields != '*':
+            group_by = f"GROUP BY {fields}"
+
+        query = f"""
+                    SELECT
+                        {fields}
+                    FROM
+                        {payload['id']}
+                        {query_where}
+                        {group_by}
+                """
+
+        df = utils.execute_query(query=query, mode='pandas')
+
+        return df
+
+    def get_initial_dataframe_from_etl(self):
+        query_where = ''
+        where = 'WHERE'
+        fields = "*"
+        group_by = ''
+        payload = request.get_json()
+
+        if 'indicators' in payload and type(payload['indicators']) == list:
+            fields = ", ".join(payload['indicators'])
 
         if fields != '*':
             group_by = f"GROUP BY {fields}"
@@ -203,6 +270,8 @@ class PreProcessing(Resource):
             correlation_items = {}
 
             payload = request.get_json()
+
+            #self.reload_data
 
             df = self.get_dataframe()
             df = self.get_df_pre_processed(df)

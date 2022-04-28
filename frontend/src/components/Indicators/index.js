@@ -29,6 +29,7 @@ class Indicators extends Component {
       this.props.getCourses({ datasource: this.getDataSourceId() });
     };
 
+
     this.props.indicatorInitFilter();
   }
 

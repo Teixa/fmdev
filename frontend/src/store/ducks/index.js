@@ -2,6 +2,7 @@ import { combineReducers } from 'redux';
 import { connectRouter } from 'connected-react-router';
 
 import lms from './lms';
+import etl from './etl';
 import auth from './auth';
 import train from './train';
 import chart from './chart';
@@ -23,6 +24,7 @@ import { reducer as toastr } from 'react-redux-toastr';
 
 export default history => combineReducers({
   lms,
+  etl,
   auth,
   train,
   chart,

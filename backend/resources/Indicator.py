@@ -46,17 +46,38 @@ class Indicator(Resource):
 
         return indicators
 
+    def get_indicators_by_etl(self):
+        etl_id = request.get_json()['id']
+
+        query = f"""SELECT 
+                        name as value,
+                        description as label
+                    FROM
+                        indicators_engajamento
+                    WHERE 
+                        etl='{etl_id}'
+                    GROUP BY 
+                        name, description, etl
+                    ORDER BY
+                        name
+                    """
+
+        return utils.execute_query(query)
 
     @jwt_required
     def post(self):
         try:
             context = request.get_json()['context']
+            print(context)
 
             if context == 'LMS':
                 return self.get_indicators_by_lms()
             
             if context == 'CSV':
                 return self.get_indicators_by_csv()
+            
+            if context == 'ETL':
+                return self.get_indicators_by_etl()
             
             return []
         except:

@@ -1,5 +1,6 @@
 import { all, takeLatest } from 'redux-saga/effects';
 import { Types as LmsTypes } from '../ducks/lms';
+import { Types as EtlTypes } from '../ducks/etl';
 import { Types as AuthTypes } from '../ducks/auth';
 import { Types as ChartTypes } from '../ducks/chart';
 import { Types as CourseTypes } from '../ducks/course';
@@ -21,6 +22,7 @@ import { getDownload } from './download';
 import { getModelCopy } from './model_copy';
 import { postTrain, deleteTrain } from './train';
 import { getLms, putLms } from './lms';
+import { getEtl, putEtl } from './etl';
 import { getCourses } from './course';
 import { getSubjects } from './subject';
 import { getSemesters } from './semester';
@@ -42,6 +44,8 @@ export default function* rootSaga() {
     takeLatest(AuthTypes.SIGN_OUT_REQUEST, signOutRequest),
     takeLatest(LmsTypes.GET_LMS, getLms),
     takeLatest(LmsTypes.PUT_LMS, putLms),
+    takeLatest(EtlTypes.GET_ETL, getEtl),
+    takeLatest(EtlTypes.PUT_ETL, putEtl),
     takeLatest(CourseTypes.GET_COURSES, getCourses),
     takeLatest(SubjectTypes.GET_SUBJECTS, getSubjects),
     takeLatest(SemesterTypes.GET_SEMESTERS, getSemesters),

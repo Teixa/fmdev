@@ -66,6 +66,19 @@ class LmsSchema(ma.Schema):
     updated_at = fields.DateTime()
 
 
+class ControleEngajamento(db.Model):
+    __tablename__ = 'controle_etl'
+    id = db.Column(db.Integer, primary_key=True)
+    phenomenon = db.Column(db.String(), nullable=False)
+    description = db.Column(db.String(), nullable=False)
+
+
+class ControleEngajamentoSchema(ma.Schema):
+    id = fields.Integer(dump_only=True)
+    phenomenon = fields.String()
+    description = fields.String()
+
+
 class Indicator(db.Model):
     __tablename__ = 'indicators'
     id = db.Column(db.Integer, primary_key=True)

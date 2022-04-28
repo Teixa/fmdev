@@ -3,6 +3,7 @@ import { CardContainer } from './styles';
 import { Creators as DialogActions } from '../../store/ducks/dialog';
 import { Creators as LmsActions } from '../../store/ducks/lms';
 import { Creators as DataSourceActions } from '../../store/ducks/data_source';
+import { Creators as ETLActions } from '../../store/ducks/etl';
 import { connect } from 'react-redux';
 import { default as CustomButton } from '../../styles/Button';
 import { ConfigContainer } from '../../styles/ConfigContainer';
@@ -20,7 +21,7 @@ import DeleteIcon from 'react-feather/dist/icons/trash-2';
 import PlayIcon from 'react-feather/dist/icons/play';
 import FileIcon from 'react-feather/dist/icons/file';
 import MoodleConfigDialog from '../MoodleConfigDialog';
-import { INDICATORS, ADD_TRAIN, LMS, CSV } from '../../constants';
+import { INDICATORS, ADD_TRAIN, LMS, CSV, ETL } from '../../constants';
 import { Creators as ScreenActions } from '../../store/ducks/screen';
 import { Creators as IndicatorActions } from '../../store/ducks/indicator';
 import DataSourceDialog from '../DataSourceDialog';
@@ -31,6 +32,7 @@ import AlertDialog from '../AlertDialog';
 import filesize from "filesize";
 
 const availableLms = { moodle: true };
+const availableEtl = { engajamento: true };
 
 class DataSource extends Component {
 
@@ -47,6 +49,17 @@ class DataSource extends Component {
     if (!availableLms[item.name]) return;
 
     this.props.setDialog(item.name, {
+      ...item,
+      version: {
+        label: item.version, value: item.version
+      }
+    })
+  }
+
+  openDialogConfigEtl = (item, event) => {
+    //if (!availableEtl[item.name]) return;
+
+    this.props.setDialog(item.phenomenon, {
       ...item,
       version: {
         label: item.version, value: item.version
@@ -103,6 +116,30 @@ class DataSource extends Component {
     </Card>
   )
 
+  renderCardETL = (item, idx) => (
+    <Card className='lms-card' key={idx} style={{ opacity: availableEtl[item.phenomenon] ? 1 : .3 }}>
+      <CardActionArea>
+        <CardContent style={{ color: primaryColor }}>
+          <Typography gutterBottom variant="h5" component="h2" style={{ fontFamily: fontFamily }}>
+            {item.phenomenon}
+          </Typography>
+          <Typography variant="body2" color="textSecondary" component="p" style={{ color: primaryColor, fontFamily: fontFamily, fontSize: '10px' }}>
+            Detalhes: {item.description ? item.description : 'Não disponível'}
+          </Typography>
+        </CardContent>
+      </CardActionArea>
+      <CardActions style={{ backgroundColor: primaryColor }}>
+        <IconButton onClick={this.goToIndicatorsEtl.bind(this, ETL, item.phenomenon, item.description)}>
+          <PlayIcon size={20} color={'#FFF'} />
+        </IconButton>
+        <IconButton onClick={this.openDialogConfigEtl.bind(this, item)}>
+          <EditIcon size={20} color={'#FFF'} />
+        </IconButton>
+      </CardActions>
+    </Card>
+  )
+
+
   handleMsgDelete = (item, event) => {
     this.setState({ selectedItem: item });
 
@@ -123,6 +160,16 @@ class DataSource extends Component {
     const key = `${context}/${id}/${name}`;
   
     if (context === LMS && !availableLms[id]) return;
+
+    this.props.setScreen(ADD_TRAIN, INDICATORS);
+    this.props.setIndicator('datasource', key);
+    this.props.getIndicators({ context, id });
+  }
+
+  goToIndicatorsEtl = (context, id, name, event) => {
+    const key = `${context}/${id}/${name}`;
+  
+    //if (context === ETL && !available[id]) return;
 
     this.props.setScreen(ADD_TRAIN, INDICATORS);
     this.props.setIndicator('datasource', key);
@@ -152,6 +199,14 @@ class DataSource extends Component {
             onClick={this.setChip.bind(this, CSV)}
           />
         </div>
+        <div style={{ paddingLeft: '.5vw' }}>
+          <Chip
+            avatar={<FileIcon size={16} color={chipSelected === ETL ? '#FFF' : primaryColor} />}
+            label="Ingestao de dados"
+            className={chipSelected === ETL ? 'active-chip' : 'inactive-chip'}
+            onClick={this.setChip.bind(this, ETL)}
+          />
+        </div>
       </div>
     )
   }
@@ -160,7 +215,7 @@ class DataSource extends Component {
 
   render() {
     const { chipSelected } = this.state;
-    const { lms, data_source } = this.props;
+    const { lms, data_source, etl } = this.props;
     const loading = !!data_source.loading;
     const hasData = !!data_source.data.length;
 
@@ -194,6 +249,10 @@ class DataSource extends Component {
           {chipSelected === CSV && !hasData && !loading && (
             <StatusMsgContainer>Nenhuma fonte de dados cadastrada</StatusMsgContainer>
           )}
+
+          {chipSelected === ETL ?
+            <CardContainer>{etl.data.map((item, idx) => this.renderCardETL(item, idx))}</CardContainer>
+            : null}
         </ConfigContainer>
         <MoodleConfigDialog />
         <DataSourceDialog />
@@ -203,12 +262,13 @@ class DataSource extends Component {
   }
 }
 
-const mapStateToProps = ({ lms, data_source }) => ({ lms, data_source });
+const mapStateToProps = ({ lms, data_source, etl }) => ({ lms, data_source, etl });
 
 export default connect(
   mapStateToProps, {
   ...DialogActions, ...LmsActions,
   ...ScreenActions, ...IndicatorActions,
+  ...ETLActions,
   ...DataSourceActions
 }
 )(DataSource);
